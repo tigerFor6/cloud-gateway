@@ -1,0 +1,127 @@
+spring:
+  jmx:
+    enabled: false
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          # 获取JWT验签公钥请求路径
+          # jwk-set-uri: 'http://localhost:9010/cloud-auth/rsa/publicKey'
+          public-key-location: classpath:public.key
+
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: true   # gateway自动从注册中心获取其他微服务信息
+          lower-case-service-id: true #使用小写服务名，默认是大写
+      routes:
+        - id: cloud-auth
+          uri: lb://cloud-auth  # 从注册中心获取服务地址
+          predicates:         # Predicate集合
+            - Path=/auth/**
+        - id: cloud-admin
+          uri: lb://cloud-admin
+          predicates:
+            - Path=/admin/**
+        - id: cloud-uc
+          uri: lb://cloud-uc
+          predicates:
+            - Path=/uc/**
+        - id: zinger-customer
+          uri: lb://cloud-portal
+          predicates:
+            - Path=/customer/**
+        - id: zinger-tag
+          uri: lb://cloud-portal
+          predicates:
+            - Path=/tag/**
+        - id: zinger-event
+          uri: lb://cloud-portal
+          predicates:
+            - Path=/event/**
+        - id: zinger-common
+          uri: lb://cloud-portal
+          predicates:
+            - Path=/common/**
+        - id: zinger-user
+          uri: lb://cloud-portal
+          predicates:
+            - Path=/user/**
+        - id: cloud-bpm
+          uri: lb://cloud-bpm
+          predicates:
+            - Path=/bpm/**
+        - id: cloud-job
+          uri: lb://cloud-job
+          predicates:
+            - Path=/job/**
+      default-filters:
+        - PreserveHostHeader  # 发送原主机头
+#        - name: Hystrix       # 熔断降级
+#              args:
+#                name: fallbackCmdA
+#                fallbackUri: forward:/fallbackA
+
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: GMT+8
+
+  freemarker:
+    check-template-location: false
+
+  redis:
+    database: 0
+    host: 219.141.235.67
+    port: 43967
+    password: KH_ZingerH189QsT
+    namespace: "cloud-gateway"
+    lettuce:
+      pool:
+        max-active: 8 # 连接池最大连接数（使用负值表示没有限制） 默认 8
+        max-wait: -1  # 连接池最大阻塞等待时间（使用负值表示没有限制） 默认 -1
+        max-idle: 8   # 连接池中的最大空闲连接 默认 8
+        min-idle: 0   # 连接池中的最小空闲连接 默认 0
+
+  datasource:
+    url: jdbc:p6spy:mysql://219.141.235.67:41036/zinger?useUnicode=true&characterEncoding=UTF-8&useSSL=false&zeroDateTimeBehavior=convertToNull&serverTimezone=Asia/Shanghai
+    username: zinger
+    password: kh_Zinger$#321
+    driver-class-name: com.p6spy.engine.spy.P6SpyDriver
+    # 使用druid数据源
+    type: com.alibaba.druid.pool.DruidDataSource
+    druid:
+      # 指明是否在从池中取出连接前进行检验,如果检验失败, 则从池中去除连接并尝试取出另一个，
+      #注意: 设置为true后如果要生效,validationQuery参数必须设置为非空字符串
+      test-on-borrow: false
+      # 指明连接是否被空闲连接回收器(如果有)进行检验.如果检测失败,则连接将被从池中去除.
+      #注意: 设置为true后如果要生效,validationQuery参数必须设置为非空字符串
+      test-while-idle: true
+      # 指明是否在归还到池中前进行检验，注意: 设置为true后如果要生效,
+      #validationQuery参数必须设置为非空字符串
+      test-on-return: false
+      # SQL查询,用来验证从连接池取出的连接,在将连接返回给调用者之前.
+      #如果指定,则查询必须是一个SQL SELECT并且必须返回至少一行记录
+      validation-query: select 1
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    gateway:
+      enabled: true
+    health:
+      # 默认是never
+      show-details: always
+      enabled: true
+
+secure:
+  ignore:
+    urls: # 配置白名单路径
+      - "/favicon.ico"
+      - "/actuator/**"
+      - "/auth/oauth/**"
+      - "/fs/get/**"
